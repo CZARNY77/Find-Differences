@@ -10,6 +10,7 @@ public class HiddenDifference : MonoBehaviour
     Transform secondDifference;
     void Start()
     {
+        
         GetComponent<SpriteRenderer>().sprite = check;
         GetComponent<SpriteRenderer>().color = Color.green;
         secondDifference = gameObject.transform.GetChild(0);
@@ -20,14 +21,18 @@ public class HiddenDifference : MonoBehaviour
     }
     private void OnMouseDown()
     {
-        if (!found)
+        Click();
+    }
+
+    public void Click()
+    {
+        if (!found && !GameManager.instance.pause)
         {
             Vector3 newlocation = new Vector3(offset, 0, 0) + transform.position;
             this.GetComponent<SpriteRenderer>().enabled = true;
             secondDifference.GetComponent<SpriteRenderer>().enabled = true;
             found = true;
             GameManager.instance.finding();
-            GameManager.instance.CheckWin();
         }
     }
 }

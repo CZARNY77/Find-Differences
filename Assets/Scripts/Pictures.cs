@@ -18,8 +18,12 @@ public class Pictures : MonoBehaviour
 
     public void LoadPictures()
     {
-        transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().sprite = orginalSprite;
-        transform.GetChild(1).gameObject.GetComponent<SpriteRenderer>().sprite = secondSprite;
+        SpriteRenderer left = transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>();
+        SpriteRenderer right = transform.GetChild(1).gameObject.GetComponent<SpriteRenderer>();
+        left.sprite = orginalSprite;
+        left.size = new Vector2(1, 1);
+        right.sprite = secondSprite;
+        right.size = new Vector2(1, 1);
     }
     public void CreateCollectibles()
     {
@@ -27,22 +31,25 @@ public class Pictures : MonoBehaviour
         {
             for (int i = 0; i < collectibles; i++)
             {
-                Instantiate(hiddenDifference, Vector3.zero, Quaternion.identity, transform.GetChild(2));
+                Instantiate(hiddenDifference, new Vector3(0,0, -0.2f), Quaternion.identity, transform.GetChild(2));
             }
         }
     }
 
     private void OnMouseDown()
     {
-        if (tempWrongAnswer != null)
+        if (!GameManager.instance.pause)
         {
-            DestroyMe();
-            CancelInvoke("DestroyMe");
+            if (tempWrongAnswer != null)
+            {
+                DestroyMe();
+                CancelInvoke("DestroyMe");
+            }
+            GameManager.instance.lossStars();
+            Vector2 newLocation = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            tempWrongAnswer = Instantiate(wrongAnswer, newLocation, Quaternion.identity);
+            Invoke("DestroyMe", 1);
         }
-
-        Vector2 newLocation = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        tempWrongAnswer = Instantiate(wrongAnswer, newLocation, Quaternion.identity);
-        Invoke("DestroyMe", 2);
     }
     void DestroyMe()
     {
