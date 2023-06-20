@@ -7,15 +7,16 @@ public class HiddenDifference : MonoBehaviour
     public Sprite check;
     public float offset;
     bool found = false;
-    Transform secondDifference;
+    SpriteRenderer spriteRenderer;
+    SpriteRenderer secondDifference;
     void Start()
     {
-        
-        GetComponent<SpriteRenderer>().sprite = check;
-        GetComponent<SpriteRenderer>().color = Color.green;
-        secondDifference = gameObject.transform.GetChild(0);
-        secondDifference.GetComponent<SpriteRenderer>().sprite = check;
-        secondDifference.GetComponent<SpriteRenderer>().color = Color.green;
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        spriteRenderer.sprite = check;
+        spriteRenderer.color = Color.green;
+        secondDifference = gameObject.transform.GetChild(0).GetComponent<SpriteRenderer>();
+        secondDifference.sprite = check;
+        secondDifference.color = Color.green;
         secondDifference.GetComponent<Transform>().transform.position = transform.position + new Vector3(offset, 0, 0);
 
     }
@@ -28,9 +29,8 @@ public class HiddenDifference : MonoBehaviour
     {
         if (!found && !GameManager.instance.pause)
         {
-            Vector3 newlocation = new Vector3(offset, 0, 0) + transform.position;
-            this.GetComponent<SpriteRenderer>().enabled = true;
-            secondDifference.GetComponent<SpriteRenderer>().enabled = true;
+            spriteRenderer.enabled = true;
+            secondDifference.enabled = true;
             found = true;
             GameManager.instance.finding();
         }
