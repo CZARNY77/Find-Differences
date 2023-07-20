@@ -8,11 +8,12 @@ using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
-    [SerializeField] int hidden;
+    public int hidden;
     [SerializeField] int found = 0;
     int mistakes = 3;
     int currentIndexLevel;
     public bool pause = false;
+    public int currentLevel = 1;
 
     [Header("Stars")]
     [SerializeField] GameObject starPrefab;
@@ -40,8 +41,9 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         currentIndexLevel = SceneManager.GetActiveScene().buildIndex;
-        if(currentIndexLevel == 1)
+        if(currentIndexLevel >= 1)
         {
+            currentLevel = 1;
             UpdateText();
             StarGenerator(starsPanel, false);
         }
@@ -54,7 +56,6 @@ public class GameManager : MonoBehaviour
         {
             EnablePanel(nextLevelPanel);
             found = 0;
-            UpdateText();
             StarGenerator(starsNextLevelPanel, true);
         }
     }
@@ -64,10 +65,10 @@ public class GameManager : MonoBehaviour
         if(mistakes >= 0)
             Destroy(stars[mistakes]);
     }
-    public void CountsHidden(int collectibles)
+    public void CountsHidden()
     {
-        hidden = collectibles;
-        hiddenText.text = hidden.ToString();
+        hidden++;
+        hiddenText.text = hidden.ToString(); // do poprawy
     }
     void StarGenerator(GameObject objectParent, bool end)
     {
@@ -110,7 +111,7 @@ public class GameManager : MonoBehaviour
 
     public void ReloadLevel()
     {
-        NextLevel.instance.ReloadLevel();
+        //NextLevel.instance.ReloadLevel();
         found = 0;
         UpdateText();
         ResetStars();
@@ -133,5 +134,25 @@ public class GameManager : MonoBehaviour
         }
         mistakes = 3;
         StarGenerator(starsPanel, false);
+    }
+
+    public void NextLevel()
+    {
+        currentLevel++;
+        hidden = 0;
+        LoadPicture.instance.DeleteHiddenDifference();
+        try
+        {
+            LoadPicture.instance.LoadLevel();
+
+            DisablePanel(nextLevelPanel);
+            ResetStars();
+            UpdateText();
+        }
+        catch
+        {
+            DisablePanel(nextLevelPanel);
+            EnablePanel(soonPanel);
+        }
     }
 }
