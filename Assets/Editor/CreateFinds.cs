@@ -7,7 +7,7 @@ using UnityEditor;
 [CustomEditor(typeof(LoadPicture))]
 public class CreateFinds : Editor
 {
-    bool foldoutOpen = true;
+    bool foldoutOpen = false;
     int level = 1;
     int countFinds = 0;
     public override void OnInspectorGUI()
@@ -26,16 +26,16 @@ public class CreateFinds : Editor
             {
                 try {
                     levels.SetSprites();
-                    levels.LoadPictures(level);
+                    levels.EditorLoadPictures(level);
                 }
                 catch { Debug.LogError("Images not found"); }
             }
             if (GUILayout.Button("Load Json"))
             {
 
-                try { 
-                    levels.SetDifferences(); 
-                    levels.LoadFinds(level); 
+                try {
+                    levels.SetDifferences();
+                    levels.EditorLoadFinds(level); 
                 }
                 catch { Debug.LogError("Json not found"); }
             }

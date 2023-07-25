@@ -35,4 +35,8 @@ public class HiddenDifference : MonoBehaviour
             GameManager.instance.finding();
         }
     }
+    public void SetFound()
+    {
+        found = false;
+    }
 }

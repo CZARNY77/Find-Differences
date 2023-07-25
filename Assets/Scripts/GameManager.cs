@@ -111,7 +111,7 @@ public class GameManager : MonoBehaviour
 
     public void ReloadLevel()
     {
-        //NextLevel.instance.ReloadLevel();
+        LoadPicture.instance.DeleteHiddenDifference(false);
         found = 0;
         UpdateText();
         ResetStars();
@@ -140,19 +140,17 @@ public class GameManager : MonoBehaviour
     {
         currentLevel++;
         hidden = 0;
-        LoadPicture.instance.DeleteHiddenDifference();
-        try
-        {
-            LoadPicture.instance.LoadLevel();
-
-            DisablePanel(nextLevelPanel);
-            ResetStars();
-            UpdateText();
-        }
-        catch
-        {
-            DisablePanel(nextLevelPanel);
-            EnablePanel(soonPanel);
-        }
+        LoadPicture.instance.DeleteHiddenDifference(true);
+        
+        LoadPicture.instance.LoadLevel();
+        DisablePanel(nextLevelPanel);
+        ResetStars();
+        UpdateText();
+        
+    }
+    public void LastLevel()
+    {
+        DisablePanel(nextLevelPanel);
+        EnablePanel(soonPanel);
     }
 }
