@@ -24,10 +24,12 @@ public class LoadPicture : MonoBehaviour
     SpriteRenderer[] sprites;
     public GameObject hiddenDifference;
     Transform differences;
+    Sprite[] loadSprite;
 
     void Start()
     {
         if(instance == null)    instance = this;
+        loadSprite = new Sprite[2];
         SetSprites();
         SetDifferences();
         LoadLevel();
@@ -60,22 +62,29 @@ public class LoadPicture : MonoBehaviour
         string filePath;
         for (int i = 0; i < sprites.Length; i++)
         {
-            filePath = Path.Combine(Application.streamingAssetsPath, "Level " + currentLevel + "/" + (i + 1) + ".png");
+            int rand = (int)(Random.value * 10000);
+            filePath = Path.Combine(Application.streamingAssetsPath, "Level " + currentLevel + "/" + (i + 1) + ".png?" + rand);
+            //filePath = Path.Combine(Application.streamingAssetsPath, "Level " + currentLevel + "/" + (i + 1) + ".png");
+
             UnityWebRequest www = UnityWebRequest.Get(filePath);
             yield return www.SendWebRequest();
+
             if (www.result == UnityWebRequest.Result.Success)
             {
                 byte[] bytes = www.downloadHandler.data;
                 Texture2D texture = new Texture2D(2, 2);
                 texture.LoadImage(bytes);
-                Sprite loadSprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.one * 0.5f);
-                sprites[i].sprite = loadSprite;
+                loadSprite[i] = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.one * 0.5f);
             }
             else
             {
-                GameManager.instance.LastLevel();
+                StartCoroutine(GameManager.instance.LastLevel());
+                yield return null;
             }
         }
+        for (int i = 0; i < sprites.Length; i++)
+        { sprites[i].sprite = loadSprite[i]; }
+
     }
 
     public IEnumerator LoadFinds(int currentLevel)

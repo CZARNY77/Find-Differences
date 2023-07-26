@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
+using UnityEngine.Events;
 
 public class GameManager : MonoBehaviour
 {
@@ -41,7 +42,7 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         currentIndexLevel = SceneManager.GetActiveScene().buildIndex;
-        if(currentIndexLevel >= 1)
+        if (currentIndexLevel >= 1)
         {
             currentLevel = 1;
             UpdateText();
@@ -62,7 +63,7 @@ public class GameManager : MonoBehaviour
     public void lossStars()
     {
         mistakes--;
-        if(mistakes >= 0)
+        if (mistakes >= 0)
             Destroy(stars[mistakes]);
     }
     public void CountsHidden()
@@ -72,8 +73,8 @@ public class GameManager : MonoBehaviour
     }
     void StarGenerator(GameObject objectParent, bool end)
     {
-       if(mistakes > 0)
-       {
+        if (mistakes > 0)
+        {
             stars = new GameObject[mistakes];
             stars[0] = Instantiate(starPrefab, starsPanel.transform.position + new Vector3(-30, 0, 0), Quaternion.identity, objectParent.transform);
             if (end) stars[0].GetComponent<Image>().rectTransform.sizeDelta *= 3;
@@ -87,7 +88,7 @@ public class GameManager : MonoBehaviour
     }
     void UpdateText()
     {
-        foundText.text =found.ToString();
+        foundText.text = found.ToString();
     }
 
     //UI Button
@@ -100,27 +101,35 @@ public class GameManager : MonoBehaviour
         starsPanel.SetActive(false);
     }
 
-    public void DisablePanel(GameObject panel)
+    IEnumerator DisablePanel(GameObject panel)
     {
+        yield return new WaitForSeconds(1f);
         curtainPanel.SetActive(false);
         panel.SetActive(false);
         pause = false;
         buttonPanel.SetActive(true);
         starsPanel.SetActive(true);
+        PlayAnim(curtainPanel, false);
+        PlayAnim(panel, false);
     }
 
-    public void ReloadLevel()
+    public void ReloadLevel(bool isPanel)
     {
         LoadPicture.instance.DeleteHiddenDifference(false);
         found = 0;
         UpdateText();
         ResetStars();
-        DisablePanel(nextLevelPanel);
+        if (isPanel)
+        {
+            PlayAnim(curtainPanel, true);
+            PlayAnim(nextLevelPanel, true);
+            StartCoroutine(DisablePanel(nextLevelPanel));
+        }
     }
 
     public void LoadScene(int indexScene)
     {
-        if(indexScene == -1)
+        if (indexScene == -1)
             Application.Quit();
         else
             SceneManager.LoadScene(indexScene);
@@ -128,7 +137,7 @@ public class GameManager : MonoBehaviour
 
     public void ResetStars()
     {
-        while(mistakes >= 1)
+        while (mistakes >= 1)
         {
             lossStars();
         }
@@ -141,16 +150,30 @@ public class GameManager : MonoBehaviour
         currentLevel++;
         hidden = 0;
         LoadPicture.instance.DeleteHiddenDifference(true);
-        
+
         LoadPicture.instance.LoadLevel();
-        DisablePanel(nextLevelPanel);
-        ResetStars();
+        PlayAnim(curtainPanel, true);
+        PlayAnim(nextLevelPanel, true);
+        StartCoroutine(DisablePanel(nextLevelPanel));
+        Invoke(nameof(ResetStars), 1f);
         UpdateText();
-        
+
     }
-    public void LastLevel()
+
+    public void Resume(GameObject panel)
     {
-        DisablePanel(nextLevelPanel);
+        PlayAnim(curtainPanel, true);
+        PlayAnim(panel, true);
+        StartCoroutine(DisablePanel(panel));
+    }
+    public IEnumerator LastLevel()
+    {
+        yield return new WaitForSeconds(1f);
         EnablePanel(soonPanel);
+    }
+
+    void PlayAnim(GameObject panel, bool b)
+    {
+        panel.GetComponent<Animator>().SetBool("Exit", b);
     }
 }
