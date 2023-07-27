@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 using UnityEngine.SceneManagement;
 using UnityEngine.Events;
 
@@ -12,22 +11,25 @@ public class GameManager : MonoBehaviour
     public int hidden;
     [SerializeField] int found = 0;
     int mistakes = 3;
+    int tempMistakes;
     int currentIndexLevel;
     public bool pause = false;
     public int currentLevel = 1;
 
     [Header("Stars")]
     [SerializeField] GameObject starPrefab;
-    GameObject[] stars;
+    GameObject[] starsInGame;
+    GameObject[] starsInPanel;
     [SerializeField] GameObject starsPanel;
     [SerializeField] GameObject starsNextLevelPanel;
 
     [Header("Text UI")]
-    [SerializeField] TextMeshProUGUI foundText;
-    [SerializeField] TextMeshProUGUI hiddenText;
+    [SerializeField] Text foundText;
+    [SerializeField] Text hiddenText;
 
     [Header("Panel UI")]
     [SerializeField] GameObject curtainPanel;
+    [SerializeField] GameObject collectiblePanel;
     public GameObject nextLevelPanel;
     [SerializeField] GameObject buttonPanel;
     public GameObject soonPanel;
@@ -44,9 +46,11 @@ public class GameManager : MonoBehaviour
         currentIndexLevel = SceneManager.GetActiveScene().buildIndex;
         if (currentIndexLevel >= 1)
         {
+            starsInGame = new GameObject[3];
+            starsInPanel = new GameObject[3];
             currentLevel = 1;
             UpdateText();
-            StarGenerator(starsPanel, false);
+            StarGenerator(starsPanel, starsInGame);
         }
     }
     public void finding()
@@ -57,32 +61,61 @@ public class GameManager : MonoBehaviour
         {
             EnablePanel(nextLevelPanel);
             found = 0;
-            StarGenerator(starsNextLevelPanel, true);
+            ResetStars(false);
+            StarGenerator(starsNextLevelPanel, starsInPanel);
         }
     }
-    public void lossStars()
+    public void lossStars(bool inGame)
     {
-        mistakes--;
+
         if (mistakes >= 0)
-            Destroy(stars[mistakes]);
+        {
+            if (inGame)
+            {
+                mistakes--;
+                Destroy(starsInGame[mistakes]);
+            }
+            else
+            {
+                tempMistakes--;
+                Destroy(starsInPanel[tempMistakes]);
+            }
+        }
+    }
+    public void ResetStars(bool inGame)
+    {
+        if (inGame)
+        {
+            while (mistakes >= 1)
+            {
+                lossStars(inGame);
+            }
+
+            mistakes = 3;
+            StarGenerator(starsPanel, starsInGame);
+        }
+        else
+        {
+            tempMistakes = starsNextLevelPanel.transform.childCount;
+            while (tempMistakes >= 1)
+            {
+                lossStars(inGame);
+            }
+        }
     }
     public void CountsHidden()
     {
         hidden++;
         hiddenText.text = hidden.ToString(); // do poprawy
     }
-    void StarGenerator(GameObject objectParent, bool end)
+    void StarGenerator(GameObject objectParent, GameObject[] stars)
     {
         if (mistakes > 0)
         {
-            stars = new GameObject[mistakes];
-            stars[0] = Instantiate(starPrefab, starsPanel.transform.position + new Vector3(-30, 0, 0), Quaternion.identity, objectParent.transform);
-            if (end) stars[0].GetComponent<Image>().rectTransform.sizeDelta *= 3;
+            stars[0] = Instantiate(starPrefab, Vector3.zero, Quaternion.identity, objectParent.transform);
             for (int i = 1; i < mistakes; i++)
             {
-                Vector3 newLocation = stars[i - 1].transform.position + new Vector3(30, 0, 0);
-                stars[i] = Instantiate(starPrefab, newLocation, Quaternion.identity, objectParent.transform);
-                if (end) stars[i].GetComponent<Image>().rectTransform.sizeDelta *= 3;
+                stars[i] = Instantiate(starPrefab, Vector3.zero, Quaternion.identity, objectParent.transform);
             }
         }
     }
@@ -97,8 +130,6 @@ public class GameManager : MonoBehaviour
         pause = true;
         curtainPanel.SetActive(true);
         panel.SetActive(true);
-        buttonPanel.SetActive(false);
-        starsPanel.SetActive(false);
     }
 
     IEnumerator DisablePanel(GameObject panel)
@@ -107,18 +138,22 @@ public class GameManager : MonoBehaviour
         curtainPanel.SetActive(false);
         panel.SetActive(false);
         pause = false;
-        buttonPanel.SetActive(true);
-        starsPanel.SetActive(true);
         PlayAnim(curtainPanel, false);
         PlayAnim(panel, false);
     }
-
+    public void DisablePanel()
+    {
+        PlayAnim(curtainPanel, true);
+        PlayAnim(nextLevelPanel, true);
+        StartCoroutine(DisablePanel(nextLevelPanel));
+        UpdateText();
+    }
     public void ReloadLevel(bool isPanel)
     {
         LoadPicture.instance.DeleteHiddenDifference(false);
         found = 0;
         UpdateText();
-        ResetStars();
+        ResetStars(true);
         if (isPanel)
         {
             PlayAnim(curtainPanel, true);
@@ -135,29 +170,13 @@ public class GameManager : MonoBehaviour
             SceneManager.LoadScene(indexScene);
     }
 
-    public void ResetStars()
-    {
-        while (mistakes >= 1)
-        {
-            lossStars();
-        }
-        mistakes = 3;
-        StarGenerator(starsPanel, false);
-    }
-
     public void NextLevel()
     {
         currentLevel++;
         hidden = 0;
+        ResetStars(true);
         LoadPicture.instance.DeleteHiddenDifference(true);
-
         LoadPicture.instance.LoadLevel();
-        PlayAnim(curtainPanel, true);
-        PlayAnim(nextLevelPanel, true);
-        StartCoroutine(DisablePanel(nextLevelPanel));
-        Invoke(nameof(ResetStars), 1f);
-        UpdateText();
-
     }
 
     public void Resume(GameObject panel)

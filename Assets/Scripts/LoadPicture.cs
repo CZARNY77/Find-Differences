@@ -26,13 +26,19 @@ public class LoadPicture : MonoBehaviour
     Transform differences;
     Sprite[] loadSprite;
 
+    private void Awake()
+    {
+        if (instance == null) instance = this;
+    }
+
     void Start()
     {
-        if(instance == null)    instance = this;
         loadSprite = new Sprite[2];
         SetSprites();
         SetDifferences();
         LoadLevel();
+
+
     }
 
     public void LoadLevel()
@@ -52,6 +58,7 @@ public class LoadPicture : MonoBehaviour
             else
             {
                 hd.gameObject.GetComponent<SpriteRenderer>().enabled = false;
+                hd.gameObject.transform.GetChild(0).GetComponent<SpriteRenderer>().enabled = false;
                 hd.SetFound();
             }
         }
@@ -78,13 +85,17 @@ public class LoadPicture : MonoBehaviour
             }
             else
             {
+                GameManager.instance.DisablePanel();
                 StartCoroutine(GameManager.instance.LastLevel());
-                yield return null;
+                yield break;
             }
         }
         for (int i = 0; i < sprites.Length; i++)
         { sprites[i].sprite = loadSprite[i]; }
 
+        if(currentLevel != 1)   GameManager.instance.DisablePanel();
+
+        BackgroundManager.instance.LoadBackground(sprites[0].sprite);
     }
 
     public IEnumerator LoadFinds(int currentLevel)

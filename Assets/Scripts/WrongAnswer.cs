@@ -16,7 +16,7 @@ public class WrongAnswer : MonoBehaviour
                 DestroyMe();
                 CancelInvoke("DestroyMe");
             }
-            GameManager.instance.lossStars();
+            GameManager.instance.lossStars(true);
             Vector2 newLocation = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             tempWrongAnswer = Instantiate(wrongAnswer, newLocation, Quaternion.identity);
             Invoke("DestroyMe", 1);
