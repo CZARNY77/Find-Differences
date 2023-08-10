@@ -8,8 +8,8 @@ public class SecondDifference : MonoBehaviour
     void Start()
     {
         hiddenDifference = GetComponentInParent<HiddenDifference>();
-        CircleCollider2D collider = GetComponent<CircleCollider2D>();
-        collider.radius = hiddenDifference.GetComponent<CircleCollider2D>().radius;
+        CapsuleCollider2D collider = GetComponent<CapsuleCollider2D>();
+        collider.size = hiddenDifference.GetComponent<CapsuleCollider2D>().size;
     }
 
     private void OnMouseDown()

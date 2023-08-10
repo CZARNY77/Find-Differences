@@ -32,11 +32,16 @@ public class HiddenDifference : MonoBehaviour
             spriteRenderer.enabled = true;
             secondDifference.enabled = true;
             found = true;
-            GameManager.instance.finding();
+            GameManager.instance.Finding();
+            BackgroundManager.instance.StartAnimation(Color.green);
         }
     }
     public void SetFound()
     {
         found = false;
+    }
+    public bool GetFound()
+    {
+        return found;
     }
 }

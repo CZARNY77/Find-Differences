@@ -10,97 +10,77 @@ public class GameManager : MonoBehaviour
     public static GameManager instance;
     public int hidden;
     [SerializeField] int found = 0;
-    int mistakes = 3;
-    int tempMistakes;
     int currentIndexLevel;
     public bool pause = false;
-    public int currentLevel = 1;
+    public int currentLevel;
+
+    public int hint;
 
     [Header("Stars")]
     [SerializeField] GameObject starPrefab;
-    GameObject[] starsInGame;
-    GameObject[] starsInPanel;
-    [SerializeField] GameObject starsPanel;
     [SerializeField] GameObject starsNextLevelPanel;
 
     [Header("Text UI")]
     [SerializeField] Text foundText;
     [SerializeField] Text hiddenText;
+    [SerializeField] Text hintText;
 
     [Header("Panel UI")]
     [SerializeField] GameObject curtainPanel;
+    GameObject[] stars;
     [SerializeField] GameObject collectiblePanel;
     public GameObject nextLevelPanel;
     [SerializeField] GameObject buttonPanel;
     public GameObject soonPanel;
-
+    [SerializeField] Button[] buttonsNextLevelPanel;
+    [SerializeField] GameObject loadingPanel;
+    
     private void Awake()
     {
         if (instance == null)
         {
             instance = this;
         }
+        currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
     }
     private void Start()
     {
         currentIndexLevel = SceneManager.GetActiveScene().buildIndex;
         if (currentIndexLevel >= 1)
         {
-            starsInGame = new GameObject[3];
-            starsInPanel = new GameObject[3];
-            currentLevel = 1;
-            UpdateText();
-            StarGenerator(starsPanel, starsInGame);
+            hint = PlayerPrefs.GetInt("hint", 1);
+            UpdateText(hintText, hint);
+            stars = new GameObject[3];
+            UpdateText(foundText, found);
         }
     }
-    public void finding()
+
+
+    public void Finding()
     {
         found++;
-        UpdateText();
+        UpdateText(foundText, found);
         if (found >= hidden)
         {
+            PlayerPrefs.SetInt("WinLevel" + currentLevel, 1);
+            starsNextLevelPanel.SetActive(true);
+            loadingPanel.SetActive(false);
+            foreach (Button button in buttonsNextLevelPanel)
+            {
+                button.interactable = true;
+            }
             EnablePanel(nextLevelPanel);
             found = 0;
-            ResetStars(false);
-            StarGenerator(starsNextLevelPanel, starsInPanel);
+            ResetStars();
+            StarGenerator();
+            Clock.instance.stopClock = true;
         }
     }
-    public void lossStars(bool inGame)
+    public void ResetStars()
     {
-
-        if (mistakes >= 0)
+        foreach(GameObject star in stars)
         {
-            if (inGame)
-            {
-                mistakes--;
-                Destroy(starsInGame[mistakes]);
-            }
-            else
-            {
-                tempMistakes--;
-                Destroy(starsInPanel[tempMistakes]);
-            }
-        }
-    }
-    public void ResetStars(bool inGame)
-    {
-        if (inGame)
-        {
-            while (mistakes >= 1)
-            {
-                lossStars(inGame);
-            }
-
-            mistakes = 3;
-            StarGenerator(starsPanel, starsInGame);
-        }
-        else
-        {
-            tempMistakes = starsNextLevelPanel.transform.childCount;
-            while (tempMistakes >= 1)
-            {
-                lossStars(inGame);
-            }
+            Destroy(star);
         }
     }
     public void CountsHidden()
@@ -108,20 +88,25 @@ public class GameManager : MonoBehaviour
         hidden++;
         hiddenText.text = hidden.ToString(); // do poprawy
     }
-    void StarGenerator(GameObject objectParent, GameObject[] stars)
+    void StarGenerator()
     {
-        if (mistakes > 0)
+        int timeToLevel = hidden * 20;
+        int countStars = ((Clock.instance.minutes * 60) + Clock.instance.seconds)/(timeToLevel / 3);
+        countStars = 3 - countStars;
+        if (countStars > PlayerPrefs.GetInt("StarsLevel" + currentLevel, 0)) PlayerPrefs.SetInt("StarsLevel" + currentLevel, countStars);
+        if (countStars > 0)
         {
-            stars[0] = Instantiate(starPrefab, Vector3.zero, Quaternion.identity, objectParent.transform);
-            for (int i = 1; i < mistakes; i++)
+            stars[0] = Instantiate(starPrefab, Vector3.zero, Quaternion.identity, starsNextLevelPanel.transform);
+            for (int i = 1; i < countStars; i++)
             {
-                stars[i] = Instantiate(starPrefab, Vector3.zero, Quaternion.identity, objectParent.transform);
+                stars[i] = Instantiate(starPrefab, Vector3.zero, Quaternion.identity, starsNextLevelPanel.transform);
+                if (i >= 2) UpdateHint(1);
             }
         }
     }
-    void UpdateText()
+    void UpdateText(Text currentText, int value)
     {
-        foundText.text = found.ToString();
+        currentText.text = value.ToString();
     }
 
     //UI Button
@@ -146,19 +131,24 @@ public class GameManager : MonoBehaviour
         PlayAnim(curtainPanel, true);
         PlayAnim(nextLevelPanel, true);
         StartCoroutine(DisablePanel(nextLevelPanel));
-        UpdateText();
+        UpdateText(foundText, found);
     }
     public void ReloadLevel(bool isPanel)
     {
         LoadPicture.instance.DeleteHiddenDifference(false);
         found = 0;
-        UpdateText();
-        ResetStars(true);
+        UpdateText(foundText, found);
+        Clock.instance.ResetTime();
         if (isPanel)
         {
             PlayAnim(curtainPanel, true);
             PlayAnim(nextLevelPanel, true);
             StartCoroutine(DisablePanel(nextLevelPanel));
+        }
+        Hint[] hints = FindObjectsOfType<Hint>();
+        foreach(Hint tempHint in hints)
+        {
+            Destroy(tempHint);
         }
     }
 
@@ -172,9 +162,14 @@ public class GameManager : MonoBehaviour
 
     public void NextLevel()
     {
+        foreach (Button button in buttonsNextLevelPanel)
+        {
+            button.interactable = false;
+        }
+        starsNextLevelPanel.SetActive(false);
+        loadingPanel.SetActive(true);
         currentLevel++;
         hidden = 0;
-        ResetStars(true);
         LoadPicture.instance.DeleteHiddenDifference(true);
         LoadPicture.instance.LoadLevel();
     }
@@ -194,5 +189,12 @@ public class GameManager : MonoBehaviour
     void PlayAnim(GameObject panel, bool b)
     {
         panel.GetComponent<Animator>().SetBool("Exit", b);
+    }
+
+    public void UpdateHint(int value)
+    {
+        hint += value;
+        UpdateText(hintText, hint);
+        PlayerPrefs.SetInt("hint", hint);
     }
 }

@@ -9,7 +9,9 @@ public class FindData
 {
     public float x;
     public float y;
-    public float r;
+    public Vector2 size;
+    public CapsuleDirection2D direction;
+    public float rotation;
 }
 
 [System.Serializable]
@@ -25,6 +27,8 @@ public class LoadPicture : MonoBehaviour
     public GameObject hiddenDifference;
     Transform differences;
     Sprite[] loadSprite;
+    [SerializeField] GameObject hint;
+    [SerializeField] GameObject loadingPanel;
 
     private void Awake()
     {
@@ -37,8 +41,6 @@ public class LoadPicture : MonoBehaviour
         SetSprites();
         SetDifferences();
         LoadLevel();
-
-
     }
 
     public void LoadLevel()
@@ -91,11 +93,13 @@ public class LoadPicture : MonoBehaviour
             }
         }
         for (int i = 0; i < sprites.Length; i++)
-        { sprites[i].sprite = loadSprite[i]; }
-
-        if(currentLevel != 1)   GameManager.instance.DisablePanel();
-
+        { 
+            sprites[i].sprite = loadSprite[i]; 
+        }
+        if(currentLevel != PlayerPrefs.GetInt("CurrentLevel", 1))   GameManager.instance.DisablePanel();
+        else    loadingPanel.SetActive(false); 
         BackgroundManager.instance.LoadBackground(sprites[0].sprite);
+        Clock.instance.ResetTime();
     }
 
     public IEnumerator LoadFinds(int currentLevel)
@@ -113,7 +117,9 @@ public class LoadPicture : MonoBehaviour
             {
                 Vector3 newPosition = differences.position + new Vector3(find.x, find.y, -0.1f);
                 GameObject currentHiddenDifference = Instantiate(hiddenDifference, newPosition, Quaternion.identity, differences);
-                currentHiddenDifference.GetComponent<CircleCollider2D>().radius = find.r;
+                currentHiddenDifference.GetComponent<CapsuleCollider2D>().size = find.size;
+                currentHiddenDifference.GetComponent<CapsuleCollider2D>().direction = find.direction;
+                currentHiddenDifference.transform.rotation = Quaternion.Euler(0,0,find.rotation);
                 try { GameManager.instance.CountsHidden(); }
                 catch { Debug.Log("success, find loaded"); }
             }
@@ -128,6 +134,25 @@ public class LoadPicture : MonoBehaviour
     public void SetSprites()
     {
         sprites = GetComponentsInChildren<SpriteRenderer>();
+    }
+    public void Hint()
+    {
+       if(GameManager.instance.hint >= 1)
+        {
+            HiddenDifference[] hiddenDifferences = FindObjectsOfType<HiddenDifference>();
+            HiddenDifference tempHiddenDifference;
+            foreach (HiddenDifference hiddenDifference in hiddenDifferences)
+            {
+                if (hiddenDifference.GetFound() == false)
+                {
+                    tempHiddenDifference = hiddenDifference;
+                    GameObject tempHint = Instantiate(hint, tempHiddenDifference.transform.position, Quaternion.identity);
+                    tempHint.GetComponent<Hint>().SetFind(tempHiddenDifference);
+                    GameManager.instance.UpdateHint(-1);
+                    break;
+                }
+            }
+        }
     }
 
 #if UNITY_EDITOR
@@ -160,7 +185,9 @@ public class LoadPicture : MonoBehaviour
         {
             Vector3 newPosition = differences.position + new Vector3(find.x, find.y, -0.1f);
             GameObject currentHiddenDifference = Instantiate(hiddenDifference, newPosition, Quaternion.identity, differences);
-            currentHiddenDifference.GetComponent<CircleCollider2D>().radius = find.r;
+            currentHiddenDifference.GetComponent<CapsuleCollider2D>().size = find.size;
+            currentHiddenDifference.GetComponent<CapsuleCollider2D>().direction = find.direction;
+            currentHiddenDifference.transform.rotation = Quaternion.Euler(0, 0, find.rotation);
             try { GameManager.instance.CountsHidden(); }
             catch { Debug.Log("success, find loaded"); }
         }

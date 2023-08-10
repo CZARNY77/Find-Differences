@@ -70,11 +70,13 @@ public class CreateFinds : Editor
                 for(int i = 0; i < hiddenDifferences.Length; i++)
                 {
                     GameObject tempHiddenDifference = hiddenDifferences[i].gameObject;
-                    findDatas[i] = new FindData { 
-                        x = tempHiddenDifference.transform.position.x - parent.position.x, 
-                        y = tempHiddenDifference.transform.position.y - parent.position.y, 
-                        r = tempHiddenDifference.GetComponent<CircleCollider2D>().radius
-                    };
+                    findDatas[i] = new FindData {
+                        x = tempHiddenDifference.transform.position.x - parent.position.x,
+                        y = tempHiddenDifference.transform.position.y - parent.position.y,
+                        size = tempHiddenDifference.GetComponent<CapsuleCollider2D>().size,
+                        direction = tempHiddenDifference.GetComponent<CapsuleCollider2D>().direction,
+                        rotation = tempHiddenDifference.transform.rotation.z
+                };
                 }
 
                 FindsData findsData = new FindsData { finds = findDatas };
@@ -93,6 +95,10 @@ public class CreateFinds : Editor
                 {
                     DestroyImmediate(hiddenDifference.gameObject);
                 }
+            }
+            if (GUILayout.Button("Delete Player Prefs"))
+            {
+                PlayerPrefs.DeleteAll();
             }
         }
     }
