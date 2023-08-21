@@ -73,7 +73,7 @@ public class GameManager : MonoBehaviour
             found = 0;
             ResetStars();
             StarGenerator();
-            Clock.instance.stopClock = true;
+            Clock.instance.SwitchClock();
         }
     }
     public void ResetStars()
@@ -115,6 +115,7 @@ public class GameManager : MonoBehaviour
         pause = true;
         curtainPanel.SetActive(true);
         panel.SetActive(true);
+        Clock.instance.SwitchClock();
     }
 
     IEnumerator DisablePanel(GameObject panel)
@@ -125,6 +126,7 @@ public class GameManager : MonoBehaviour
         pause = false;
         PlayAnim(curtainPanel, false);
         PlayAnim(panel, false);
+        Clock.instance.SwitchClock();
     }
     public void DisablePanel()
     {

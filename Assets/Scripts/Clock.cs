@@ -9,7 +9,7 @@ public class Clock : MonoBehaviour
     float timePassed = 0f;
     public int minutes, seconds;
     Text timeText;
-    public bool stopClock = false;
+    bool stopClock = false;
 
     private void Awake()
     {
@@ -54,5 +54,10 @@ public class Clock : MonoBehaviour
         minutes = 0;
         seconds = -1;
         stopClock = false;
+    }
+
+    public void SwitchClock()
+    {
+        stopClock = !stopClock;
     }
 }

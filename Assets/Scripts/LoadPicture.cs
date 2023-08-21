@@ -71,6 +71,7 @@ public class LoadPicture : MonoBehaviour
         string filePath;
         for (int i = 0; i < sprites.Length; i++)
         {
+            
             int rand = (int)(Random.value * 10000);
             filePath = Path.Combine(Application.streamingAssetsPath, "Level " + currentLevel + "/" + (i + 1) + ".png?" + rand);
             //filePath = Path.Combine(Application.streamingAssetsPath, "Level " + currentLevel + "/" + (i + 1) + ".png");

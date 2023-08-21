@@ -13,10 +13,8 @@ public class HiddenDifference : MonoBehaviour
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         spriteRenderer.sprite = check;
-        spriteRenderer.color = Color.green;
         secondDifference = gameObject.transform.GetChild(0).GetComponent<SpriteRenderer>();
         secondDifference.sprite = check;
-        secondDifference.color = Color.green;
         secondDifference.GetComponent<Transform>().transform.position = transform.position + new Vector3(offset, 0, 0);
 
     }
